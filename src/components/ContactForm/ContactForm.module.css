@@ -1,36 +1,20 @@
-.contactForm {
+/* src/components/ContactForm/ContactForm.module.css */
+.form {
   display: flex;
   flex-direction: column;
-  width: 300px;
   margin-bottom: 20px;
 }
 
-.contactForm label {
-  font-size: 16px;
+.label {
   margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
 }
 
-.contactForm input {
-  padding: 8px;
+.input {
+  padding: 5px;
   margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
 }
 
-.contactForm button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  background-color: #28a745;
-  color: white;
+.button {
+  padding: 10px;
   cursor: pointer;
-  font-size: 16px;
-  margin-top: 15px;
-}
-
-.contactForm button:hover {
-  background-color: #218838;
 }

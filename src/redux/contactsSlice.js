@@ -8,9 +8,9 @@ const contactsSlice = createSlice({
     isLoading: false,
     error: null,
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchContacts.pending, state => {
+      .addCase(fetchContacts.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchContacts.fulfilled, (state, action) => {

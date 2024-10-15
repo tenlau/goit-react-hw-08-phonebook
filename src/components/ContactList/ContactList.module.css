@@ -1,32 +1,16 @@
-.contactList {
-  list-style-type: none;
+/* src/components/ContactList/ContactList.module.css */
+.list {
+  list-style: none;
   padding: 0;
-  width: 300px;
 }
 
-.contactListItem {
+.listItem {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-  font-size: 16px;
+  margin-bottom: 10px;
 }
 
-.contactListItem p {
-  margin: 0;
-}
-
-.contactListItem button {
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #dc3545;
-  color: white;
+.button {
+  padding: 5px;
   cursor: pointer;
-  font-size: 14px;
-}
-
-.contactListItem button:hover {
-  background-color: #c82333;
 }

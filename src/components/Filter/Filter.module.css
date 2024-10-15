@@ -1,17 +1,13 @@
+/* src/components/Filter/Filter.module.css */
 .filter {
   margin-bottom: 20px;
 }
 
-.filter label {
+.label {
   display: block;
-  margin-bottom: 5px;
-  font-size: 16px;
 }
 
-.filter input {
-  width: 25%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
+.input {
+  padding: 5px;
+  margin-top: 5px;
 }

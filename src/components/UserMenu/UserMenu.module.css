@@ -1,0 +1,14 @@
+/* src/components/UserMenu/UserMenu.module.css */
+.menu {
+    display: flex;
+    align-items: center;
+}
+
+.email {
+    margin-right: 10px;
+}
+
+.button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
