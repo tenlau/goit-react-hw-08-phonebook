@@ -3,7 +3,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { registerUser as registerApi } from '../api/api';
 import { setAuthHeader } from '../api/api';
 import { loginUser as loginApi } from '../api/api';  // Assuming you have a login API function
-import { setNotification } from './notificationsSlice'; // Adjust path as necessary. Same folder, use './'
+import { setNotification } from './notificationSlice'; // Adjust path as necessary. Same folder, use './'
 
 export const loginUser = createAsyncThunk(
   'auth/login',
