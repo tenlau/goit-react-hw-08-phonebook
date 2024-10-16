@@ -20,9 +20,11 @@ const Register = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(registerUser(formData));
-  };
+  e.preventDefault();
+  // Check the structure of formData
+  console.log(formData); // Add this line to see the structure of the data
+  dispatch(registerUser(formData));
+};
 
   return (
     <form onSubmit={handleSubmit}>
