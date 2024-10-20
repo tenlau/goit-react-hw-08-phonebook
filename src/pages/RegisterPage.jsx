@@ -8,18 +8,38 @@ const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitError, setSubmitError] = useState(''); // State to handle form errors
   const dispatch = useDispatch();
   const error = useSelector(state => state.auth.error);
 
+  // Validate form before submitting
   const handleSubmit = e => {
     e.preventDefault();
-    dispatch(registerUser({ name, email, password }));
+
+    if (!name || !email || !password) {
+      setSubmitError('All fields are required'); // Handle empty field error
+      return;
+    }
+
+    // Clear submit error before dispatch
+    setSubmitError('');
+
+    // Dispatch the register action
+    dispatch(registerUser({ name, email, password }))
+      .unwrap() // Unwraps the result to catch errors in .catch
+      .catch(() => {
+        setSubmitError('Registration failed. Please check your input and try again.');
+      });
   };
 
   return (
     <div>
       <h2>Register</h2>
+
+      {/* Show server error or form error */}
+      {submitError && <p className={styles.error}>{submitError}</p>}
       {error && <p className={styles.error}>{error}</p>}
+
       <form onSubmit={handleSubmit} className={styles.form}>
         <label>
           Name

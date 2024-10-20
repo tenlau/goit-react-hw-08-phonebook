@@ -12,14 +12,16 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, thunkAPI) => {
     try {
+      console.log('Registering user with data:', userData); // Log the data
       const { data } = await axios.post('/users/signup', userData);
-      setAuthHeader(data.token); // Set the token after registration
       return data;
     } catch (error) {
+      console.error('Registration error:', error.response?.data || error.message); // Log any errors
       return thunkAPI.rejectWithValue('Registration failed');
     }
   }
 );
+
 
 // Login user
 export const loginUser = createAsyncThunk(
