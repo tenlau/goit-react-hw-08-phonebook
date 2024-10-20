@@ -37,13 +37,23 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+
 // Logout user
 export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
+  const token = thunkAPI.getState().auth.token;
+
+  console.log('Token being sent for logout:', token);
+
+  if (!token) {
+    return thunkAPI.rejectWithValue('No token found, cannot logout.');
+  }
+
   try {
-    console.log('Authorization header:', axios.defaults.headers.common.Authorization); // Log the token
-    await axios.post('/users/logout'); // Send the logout request
-    axios.defaults.headers.common.Authorization = ''; // Clear the token after successful logout
+    setAuthHeader(token);
+    await axios.post('/users/logout');
+    axios.defaults.headers.common.Authorization = '';
   } catch (error) {
-    return thunkAPI.rejectWithValue('Logout failed');
+    console.error('Logout error:', error.response?.data || error.message);
+    return thunkAPI.rejectWithValue('Logout failed. Unauthorized.');
   }
 });

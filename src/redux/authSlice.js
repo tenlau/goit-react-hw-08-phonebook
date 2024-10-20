@@ -6,28 +6,28 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: null,
-    token: null, // Token is stored here
+    token: null, // Store the JWT token here
     isLoggedIn: false,
     error: null,
   },
   extraReducers: builder => {
     builder
-      // Handle registration
+      // After registration, save token and user data
       .addCase(registerUser.fulfilled, (state, { payload }) => {
         state.user = payload.user;
-        state.token = payload.token; // Save the token
+        state.token = payload.token; // Save token
         state.isLoggedIn = true;
       })
-      // Handle login
+      // After login, save token and user data
       .addCase(loginUser.fulfilled, (state, { payload }) => {
         state.user = payload.user;
-        state.token = payload.token; // Save the token
+        state.token = payload.token; // Save token
         state.isLoggedIn = true;
       })
-      // Handle logout
+      // After logout, clear token and user data
       .addCase(logoutUser.fulfilled, state => {
         state.user = null;
-        state.token = null; // Clear the token
+        state.token = null; // Clear token
         state.isLoggedIn = false;
       });
   },
