@@ -1,0 +1,478 @@
+File: D:\goit-react-hw-08-1-phonebook\src\index.js 
+// src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
+import store from './redux/store';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
+  </React.StrictMode>
+);
+File: D:\goit-react-hw-08-1-phonebook\src\App.jsx 
+// src/App.jsx
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import Navigation from './components/Navigation/Navigation';
+import UserMenu from './components/UserMenu/UserMenu';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import ContactsPage from './pages/ContactsPage';
+import PrivateRoute from './components/PrivateRoute/PrivateRoute';
+
+const App = () => (
+  <>
+    <Navigation />
+    <UserMenu />
+    <Routes>
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/contacts"
+        element={<PrivateRoute component={ContactsPage} />}
+      />
+    </Routes>
+  </>
+);
+
+export default App;
+File: D:\goit-react-hw-08-1-phonebook\src\components\ContactForm\ContactForm.jsx 
+File: D:\goit-react-hw-08-1-phonebook\src\components\ContactList\ContactList.jsx 
+File: D:\goit-react-hw-08-1-phonebook\src\components\Filter\Filter.jsx 
+File: D:\goit-react-hw-08-1-phonebook\src\components\Navigation\Navigation.jsx 
+// src/components/Navigation/Navigation.jsx
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+
+const Navigation = () => (
+  <nav>
+    <NavLink to="/register">Register</NavLink>
+    <NavLink to="/login">Login</NavLink>
+    <NavLink to="/contacts">Contacts</NavLink>
+  </nav>
+);
+
+export default Navigation;
+File: D:\goit-react-hw-08-1-phonebook\src\components\PrivateRoute\PrivateRoute.jsx 
+// src/components/PrivateRoute/PrivateRoute.jsx
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Navigate } from 'react-router-dom';
+
+const PrivateRoute = ({ component: Component, ...routeProps }) => {
+  const isLoggedIn = useSelector(state => state.auth.isLoggedIn);
+  return isLoggedIn ? <Component {...routeProps} /> : <Navigate to="/login" />;
+};
+
+export default PrivateRoute;
+File: D:\goit-react-hw-08-1-phonebook\src\components\UserMenu\UserMenu.jsx 
+// src/components/UserMenu/UserMenu.jsx
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../../redux/authOperations';
+import { useNavigate } from 'react-router-dom';
+
+const UserMenu = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(state => state.auth.user); // Get user from state
+
+  // Check if user exists before trying to access email
+  if (!user) {
+    return null; // Optionally, return a placeholder or a link to login
+  }
+
+  const handleLogout = () => {
+    dispatch(logoutUser()).then(() => {
+      navigate('/'); // Redirect to home after logging out
+    });
+  };
+
+  return (
+    <div>
+      <p>{user.email}</p> {/* Safely access user.email because we checked if user exists */}
+      <button onClick={handleLogout}>Logout</button>
+    </div>
+  );
+};
+
+export default UserMenu;
+File: D:\goit-react-hw-08-1-phonebook\src\pages\ContactsPage.jsx 
+// src/pages/ContactsPage.jsx
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchContacts } from '../redux/contactsOperations';
+import ContactList from '../components/ContactList/ContactList';
+import ContactForm from '../components/ContactForm/ContactForm';
+import Filter from '../components/Filter/Filter';
+
+const ContactsPage = () => {
+  const dispatch = useDispatch();
+  const { items, isLoading, error } = useSelector(state => state.contacts);
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
+
+  return (
+    <div>
+      <h1>Your Contacts</h1>
+      <ContactForm />
+      <h2>Contacts</h2>
+      <Filter />
+      {isLoading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+      <ContactList contacts={items} />
+    </div>
+  );
+};
+
+export default ContactsPage;
+File: D:\goit-react-hw-08-1-phonebook\src\pages\HomePage.jsx 
+// src/pages/HomePage.jsx
+import React from 'react';
+
+const HomePage = () => (
+  <div>
+    <h1>Welcome to the Contact Book</h1>
+    <nav>
+      <NavLink to="/register">Register</NavLink> |{' '}
+      <NavLink to="/login">Login</NavLink> |{' '}
+      <NavLink to="/contacts">Contacts</NavLink>
+    </nav>
+  </div>
+);
+
+export default HomePage;  // Ensure this is default export
+File: D:\goit-react-hw-08-1-phonebook\src\pages\LoginPage.jsx 
+// src/pages/LoginPage.jsx
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../redux/authOperations';
+import styles from './AuthForm.module.css'; // Using the same styles as the RegisterPage
+
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
+  const error = useSelector(state => state.auth.error);
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    dispatch(loginUser({ email, password }));
+  };
+
+  return (
+    <div>
+      <h2>Login</h2>
+      {error && <p className={styles.error}>{error}</p>}
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <button type="submit" className={styles.button}>Login</button>
+      </form>
+    </div>
+  );
+};
+
+export default LoginPage;
+File: D:\goit-react-hw-08-1-phonebook\src\pages\RegisterPage.jsx 
+// src/pages/RegisterPage.jsx
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser } from '../redux/authOperations';
+import styles from './AuthForm.module.css'; // Create a common styles file for login/register forms
+
+const RegisterPage = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitError, setSubmitError] = useState(''); // State to handle form errors
+  const dispatch = useDispatch();
+  const error = useSelector(state => state.auth.error);
+
+  // Validate form before submitting
+  const handleSubmit = e => {
+    e.preventDefault();
+
+    if (!name || !email || !password) {
+      setSubmitError('All fields are required'); // Handle empty field error
+      return;
+    }
+
+    // Clear submit error before dispatch
+    setSubmitError('');
+
+    // Dispatch the register action
+    dispatch(registerUser({ name, email, password }))
+      .unwrap() // Unwraps the result to catch errors in .catch
+      .catch(() => {
+        setSubmitError('Registration failed. Please check your input and try again.');
+      });
+  };
+
+  return (
+    <div>
+      <h2>Register</h2>
+
+      {/* Show server error or form error */}
+      {submitError && <p className={styles.error}>{submitError}</p>}
+      {error && <p className={styles.error}>{error}</p>}
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <label>
+          Name
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <button type="submit" className={styles.button}>Register</button>
+      </form>
+    </div>
+  );
+};
+
+export default RegisterPage;
+File: D:\goit-react-hw-08-1-phonebook\src\redux\authOperations.js 
+// src/redux/authOperations.js
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+// Set the Authorization header
+const setAuthHeader = token => {
+  axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+};
+
+// Register user
+export const registerUser = createAsyncThunk(
+  'auth/register',
+  async (userData, thunkAPI) => {
+    try {
+      console.log('Registering user with data:', userData); // Log the data
+      const { data } = await axios.post('/users/signup', userData);
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error.response?.data || error.message); // Log any errors
+      return thunkAPI.rejectWithValue('Registration failed');
+    }
+  }
+);
+
+
+// Login user
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (credentials, thunkAPI) => {
+    try {
+      const { data } = await axios.post('/users/login', credentials);
+      axios.defaults.headers.common.Authorization = `Bearer ${data.token}`; // Set the token after login
+      return data;  // The response should contain both token and user data
+    } catch (error) {
+      return thunkAPI.rejectWithValue('Login failed.');
+    }
+  }
+);
+
+
+// Logout user
+export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
+  const token = thunkAPI.getState().auth.token;
+
+  console.log('Token being sent for logout:', token);
+
+  if (!token) {
+    return thunkAPI.rejectWithValue('No token found, cannot logout.');
+  }
+
+  try {
+    setAuthHeader(token);
+    await axios.post('/users/logout');
+    axios.defaults.headers.common.Authorization = '';
+  } catch (error) {
+    console.error('Logout error:', error.response?.data || error.message);
+    return thunkAPI.rejectWithValue('Logout failed. Unauthorized.');
+  }
+});
+File: D:\goit-react-hw-08-1-phonebook\src\redux\authSlice.js 
+// src/redux/authSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+import { registerUser, loginUser, logoutUser } from './authOperations';
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: {
+    user: null,
+    token: null, // Store the JWT token here
+    isLoggedIn: false,
+    error: null,
+  },
+  extraReducers: builder => {
+    builder
+      // After registration, save token and user data
+      .addCase(registerUser.fulfilled, (state, { payload }) => {
+        state.user = payload.user;
+        state.token = payload.token; // Save token
+        state.isLoggedIn = true;
+      })
+      // After login, save token and user data
+      .addCase(loginUser.fulfilled, (state, { payload }) => {
+        state.user = payload.user;
+        state.token = payload.token; // Save token
+        state.isLoggedIn = true;
+      })
+      // After logout, clear token and user data
+      .addCase(logoutUser.fulfilled, state => {
+        state.user = null;
+        state.token = null; // Clear token
+        state.isLoggedIn = false;
+      });
+  },
+});
+
+export default authSlice.reducer;
+File: D:\goit-react-hw-08-1-phonebook\src\redux\contactsOperations.js 
+//src/redus/contactsOperatios.jsx
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+const API_URL = 'https://connections-api.goit.global';
+axios.defaults.baseURL = API_URL;
+
+
+// Fetch contacts operation
+export const fetchContacts = createAsyncThunk(
+  'contacts/fetchAll',
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(API_URL);
+      console.log('Contacts fetched:', response.data); // Log API response
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching contacts:', error.message);
+      return thunkAPI.rejectWithValue('Failed to fetch contacts');
+    }
+  }
+);
+
+// Add contact operation
+export const addContact = createAsyncThunk(
+  'contacts/addContact',
+  async (newContact, thunkAPI) => {
+    try {
+      const response = await axios.post(API_URL, newContact);
+      console.log('Contact added:', response.data); // Log API response
+      return response.data;
+    } catch (error) {
+      console.error('Error adding contact:', error.message);
+      return thunkAPI.rejectWithValue('Failed to add contact');
+    }
+  }
+);
+
+// Delete contact operation
+export const deleteContact = createAsyncThunk(
+  'contacts/deleteContact',
+  async (contactId, thunkAPI) => {
+    try {
+      await axios.delete(`${API_URL}/${contactId}`);
+      console.log(`Contact with ID ${contactId} deleted`); // Log deletion
+      return contactId;
+    } catch (error) {
+      console.error('Error deleting contact:', error.message);
+      return thunkAPI.rejectWithValue('Failed to delete contact');
+    }
+  }
+);
+File: D:\goit-react-hw-08-1-phonebook\src\redux\contactsSlice.js 
+import { createSlice } from '@reduxjs/toolkit';
+import { fetchContacts, addContact, deleteContact } from './contactsOperations';
+
+const contactsSlice = createSlice({
+  name: 'contacts',
+  initialState: {
+    items: [],
+    isLoading: false,
+    error: null,
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchContacts.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchContacts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(addContact.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(deleteContact.fulfilled, (state, action) => {
+        state.items = state.items.filter(contact => contact.id !== action.payload);
+      });
+  },
+});
+
+export default contactsSlice.reducer;
+File: D:\goit-react-hw-08-1-phonebook\src\redux\store.js 
+// src/redux/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import contactsReducer from './contactsSlice';
+import authReducer from './authSlice';
+
+const store = configureStore({
+  reducer: {
+    contacts: contactsReducer,
+    auth: authReducer,
+  },
+});
+
+export default store;

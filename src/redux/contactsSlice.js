@@ -5,8 +5,14 @@ const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
     items: [],
+    filter: '', // Add the filter state here
     isLoading: false,
     error: null,
+  },
+  reducers: {
+    setFilter(state, action) { // Define the setFilter reducer
+      state.filter = action.payload;
+    },
   },
   extraReducers: builder => {
     builder
@@ -30,4 +36,5 @@ const contactsSlice = createSlice({
   },
 });
 
+export const { setFilter } = contactsSlice.actions; // Export setFilter action
 export default contactsSlice.reducer;
