@@ -1,9 +1,11 @@
 // src/redux/authOperations.js
-/*import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Set the Authorization header
-const setAuthHeader = token => {
+const API_URL = 'https://connections-api.goit.global'; // Base API URL
+
+// Define setAuthHeader to set the token in headers
+const setAuthHeader = (token) => {
   axios.defaults.headers.common.Authorization = `Bearer ${token}`;
 };
 
@@ -12,63 +14,41 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, thunkAPI) => {
     try {
-      console.log('Registering user with data:', userData); // Log the data
-      const { data } = await axios.post('/users/signup', userData);
+      const { data } = await axios.post(`${API_URL}/users/signup`, userData);
       return data;
     } catch (error) {
-      console.error('Registration error:', error.response?.data || error.message); // Log any errors
       return thunkAPI.rejectWithValue('Registration failed');
     }
   }
 );
-
 
 // Login user
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, thunkAPI) => {
     try {
-      const { data } = await axios.post('/users/login', credentials);
-      axios.defaults.headers.common.Authorization = `Bearer ${data.token}`; // Set the token after login
-      return data;  // The response should contain both token and user data
+      const { data } = await axios.post(`${API_URL}/users/login`, credentials);
+      setAuthHeader(data.token); // Set token in headers after login
+      return data;
     } catch (error) {
-      return thunkAPI.rejectWithValue('Login failed.');
+      return thunkAPI.rejectWithValue('Login failed');
     }
   }
 );
-
 
 // Logout user
 export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
 
-  console.log('Token being sent for logout:', token);
-
   if (!token) {
-    return thunkAPI.rejectWithValue('No token found, cannot logout.');
+    return thunkAPI.rejectWithValue('No token found, cannot logout');
   }
 
   try {
-    setAuthHeader(token);
-    await axios.post('/users/logout');
-    axios.defaults.headers.common.Authorization = '';
+    setAuthHeader(token); // Set the token in headers
+    await axios.post(`${API_URL}/users/logout`);
+    axios.defaults.headers.common.Authorization = ''; // Clear token
   } catch (error) {
-    console.error('Logout error:', error.response?.data || error.message);
-    return thunkAPI.rejectWithValue('Logout failed. Unauthorized.');
-=========
-  const token = thunkAPI.getState().auth.token; // Get the token from the Redux state
-
-  if (!token) {
-    return thunkAPI.rejectWithValue('No token found, cannot logout.');
->>>>>>>>> Temporary merge branch 2
-  }
-
-  try {
-    axios.defaults.headers.common.Authorization = `Bearer ${token}`; // Set the Authorization header
-    await axios.post('/users/logout'); // Send the logout request
-    axios.defaults.headers.common.Authorization = ''; // Clear the token after logout
-  } catch (error) {
-    console.error('Logout error:', error.response?.data || error.message); // Log the error for debugging
-    return thunkAPI.rejectWithValue('Logout failed. Unauthorized.');
+    return thunkAPI.rejectWithValue('Logout failed');
   }
 });
