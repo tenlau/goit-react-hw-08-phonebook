@@ -1,26 +1,34 @@
-import React from 'react';
+// src/components/Filter/Filter.jsx
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFilter } from '../../redux/contactsSlice';
 
 const Filter = () => {
   const dispatch = useDispatch();
   const filter = useSelector(state => state.contacts.filter);
+  const [searchQuery, setSearchQuery] = useState(filter);
 
-  const handleChange = e => {
-    dispatch(setFilter(e.target.value));
+  const handleChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault(); // Prevent page reload
+    dispatch(setFilter(searchQuery));
   };
 
   return (
-    <div>
+    <form onSubmit={handleSearch}>
       <label>
         Find contacts by name
         <input
           type="text"
-          value={filter}
+          value={searchQuery}
           onChange={handleChange}
         />
       </label>
-    </div>
+      <button type="submit">Find</button>
+    </form>
   );
 };
 

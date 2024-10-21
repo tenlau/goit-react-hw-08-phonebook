@@ -1,3 +1,4 @@
+// src/redux/contactsSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchContacts, addContact, deleteContact, updateContact } from './contactsOperations';
 
@@ -5,7 +6,7 @@ const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
     items: [],
-    filter: '',
+    filter: '', // Filter state added here
     isLoading: false,
     error: null,
   },

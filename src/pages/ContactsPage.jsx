@@ -1,3 +1,4 @@
+// src/pages/ContactsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchContacts } from '../redux/contactsOperations';
@@ -7,7 +8,7 @@ import Filter from '../components/Filter/Filter';
 
 const ContactsPage = () => {
   const dispatch = useDispatch();
-  const { items, isLoading, error } = useSelector(state => state.contacts);
+  const { items, filter, isLoading, error } = useSelector(state => state.contacts); // Added filter state
   const [contactToUpdate, setContactToUpdate] = useState(null);
 
   useEffect(() => {
@@ -18,6 +19,11 @@ const ContactsPage = () => {
     setContactToUpdate(contact);
   };
 
+  // Apply filter logic here
+  const filteredContacts = items.filter(contact => 
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
   return (
     <div>
       <h1>Your Contacts</h1>
@@ -26,7 +32,7 @@ const ContactsPage = () => {
       <Filter />
       {isLoading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
-      <ContactList contacts={items} onEdit={handleEdit} />
+      <ContactList contacts={filteredContacts} onEdit={handleEdit} />
     </div>
   );
 };
