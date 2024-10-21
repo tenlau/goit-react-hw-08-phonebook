@@ -1,16 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchContacts, addContact, deleteContact } from './contactsOperations';
+import { fetchContacts, addContact, deleteContact, updateContact } from './contactsOperations';
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
     items: [],
-    filter: '', // Add the filter state here
+    filter: '',
     isLoading: false,
     error: null,
   },
   reducers: {
-    setFilter(state, action) { // Define the setFilter reducer
+    setFilter(state, action) {
       state.filter = action.payload;
     },
   },
@@ -32,9 +32,15 @@ const contactsSlice = createSlice({
       })
       .addCase(deleteContact.fulfilled, (state, action) => {
         state.items = state.items.filter(contact => contact.id !== action.payload);
+      })
+      .addCase(updateContact.fulfilled, (state, action) => {
+        const index = state.items.findIndex(contact => contact.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   },
 });
 
-export const { setFilter } = contactsSlice.actions; // Export setFilter action
+export const { setFilter } = contactsSlice.actions;
 export default contactsSlice.reducer;

@@ -1,3 +1,4 @@
+// src/redux/contactsOperations.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -9,10 +10,8 @@ export const fetchContacts = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await axios.get(`${API_URL}/contacts`); // Correct endpoint
-      console.log('Contacts fetched:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching contacts:', error.message);
       return thunkAPI.rejectWithValue('Failed to fetch contacts');
     }
   }
@@ -24,10 +23,8 @@ export const addContact = createAsyncThunk(
   async (newContact, thunkAPI) => {
     try {
       const response = await axios.post(`${API_URL}/contacts`, newContact); // Correct endpoint
-      console.log('Contact added:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error adding contact:', error.message);
       return thunkAPI.rejectWithValue('Failed to add contact');
     }
   }
@@ -39,11 +36,22 @@ export const deleteContact = createAsyncThunk(
   async (contactId, thunkAPI) => {
     try {
       await axios.delete(`${API_URL}/contacts/${contactId}`); // Correct endpoint
-      console.log(`Contact with ID ${contactId} deleted`);
       return contactId;
     } catch (error) {
-      console.error('Error deleting contact:', error.message);
       return thunkAPI.rejectWithValue('Failed to delete contact');
+    }
+  }
+);
+
+// Update contact operation (change to PATCH method)
+export const updateContact = createAsyncThunk(
+  'contacts/updateContact',
+  async ({ id, name, number }, thunkAPI) => {
+    try {
+      const response = await axios.patch(`${API_URL}/contacts/${id}`, { name, number });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue('Failed to update contact');
     }
   }
 );

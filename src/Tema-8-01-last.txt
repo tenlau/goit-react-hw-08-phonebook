@@ -26,28 +26,166 @@ import UserMenu from './components/UserMenu/UserMenu';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ContactsPage from './pages/ContactsPage';
-import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'; // Import ErrorBoundary
+import PrivateRoute from './components/PrivateRoute/PrivateRoute';
 
 const App = () => (
   <>
     <Navigation />
     <UserMenu />
-    <ErrorBoundary>
-      <Routes>
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        {/* Wrapping ContactsPage with ErrorBoundary for better debugging */}
-        <Route path="/contacts" element={<ContactsPage />} />
-      </Routes>
-    </ErrorBoundary>
+    <Routes>
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/contacts"
+        element={<PrivateRoute component={ContactsPage} />}
+      />
+    </Routes>
   </>
 );
 
 export default App;
 File: D:\goit-react-hw-08-1-phonebook\src\components\ContactForm\ContactForm.jsx 
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { addContact, updateContact } from '../../redux/contactsOperations';
+
+const ContactForm = ({ contactToUpdate }) => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (contactToUpdate) {
+      setName(contactToUpdate.name);
+      setNumber(contactToUpdate.number);
+    } else {
+      setName('');
+      setNumber('');
+    }
+  }, [contactToUpdate]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (name === '' || number === '') {
+      return alert('Please fill in both fields.');
+    }
+
+    if (contactToUpdate) {
+      dispatch(updateContact({ id: contactToUpdate.id, updatedContact: { name, number } }));
+    } else {
+      dispatch(addContact({ name, number }));
+    }
+
+    setName('');
+    setNumber('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Name
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+      <label>
+        Number
+        <input
+          type="tel"
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+        />
+      </label>
+      <button type="submit">{contactToUpdate ? 'Update Contact' : 'Add Contact'}</button>
+    </form>
+  );
+};
+
+export default ContactForm;
 File: D:\goit-react-hw-08-1-phonebook\src\components\ContactList\ContactList.jsx 
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { deleteContact } from '../../redux/contactsOperations';
+
+const ContactList = ({ contacts, onEdit }) => {
+  const dispatch = useDispatch();
+
+  const handleDelete = (id) => {
+    dispatch(deleteContact(id));
+  };
+
+  return (
+    <ul>
+      {contacts.map(contact => (
+        <li key={contact.id}>
+          {contact.name}: {contact.number}
+          <button onClick={() => handleDelete(contact.id)}>Delete</button>
+          <button onClick={() => onEdit(contact)}>Edit</button>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default ContactList;
 File: D:\goit-react-hw-08-1-phonebook\src\components\ErrorBoundary\ErrorBoundary.jsx 
+// src/components/ErrorBoundary/ErrorBoundary.jsx
+import React, { Component } from 'react';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error Boundary Caught an Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
 File: D:\goit-react-hw-08-1-phonebook\src\components\Filter\Filter.jsx 
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setFilter } from '../../redux/contactsSlice';
+
+const Filter = () => {
+  const dispatch = useDispatch();
+  const filter = useSelector(state => state.contacts.filter);
+
+  const handleChange = e => {
+    dispatch(setFilter(e.target.value));
+  };
+
+  return (
+    <div>
+      <label>
+        Find contacts by name
+        <input
+          type="text"
+          value={filter}
+          onChange={handleChange}
+        />
+      </label>
+    </div>
+  );
+};
+
+export default Filter;
 File: D:\goit-react-hw-08-1-phonebook\src\components\Navigation\Navigation.jsx 
 // src/components/Navigation/Navigation.jsx
 import React from 'react';
@@ -68,9 +206,9 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ component: Component, ...routeProps }) => {
   const isLoggedIn = useSelector(state => state.auth.isLoggedIn);
-  return isLoggedIn ? children : <Navigate to="/login" />;
+  return isLoggedIn ? <Component {...routeProps} /> : <Navigate to="/login" />;
 };
 
 export default PrivateRoute;
@@ -107,8 +245,7 @@ const UserMenu = () => {
 
 export default UserMenu;
 File: D:\goit-react-hw-08-1-phonebook\src\pages\ContactsPage.jsx 
-// src/pages/ContactsPage.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchContacts } from '../redux/contactsOperations';
 import ContactList from '../components/ContactList/ContactList';
@@ -118,24 +255,25 @@ import Filter from '../components/Filter/Filter';
 const ContactsPage = () => {
   const dispatch = useDispatch();
   const { items, isLoading, error } = useSelector(state => state.contacts);
+  const [contactToUpdate, setContactToUpdate] = useState(null);
 
-  // Fetch contacts on component mount
   useEffect(() => {
     dispatch(fetchContacts());
   }, [dispatch]);
 
-  // Add the console.log here to see the contacts in the console
-  console.log(items); // This will log the items (contacts) to the browser's console
+  const handleEdit = (contact) => {
+    setContactToUpdate(contact);
+  };
 
   return (
     <div>
       <h1>Your Contacts</h1>
-      <ContactForm />
+      <ContactForm contactToUpdate={contactToUpdate} />
       <h2>Contacts</h2>
       <Filter />
       {isLoading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
-      <ContactList contacts={items} />
+      <ContactList contacts={items} onEdit={handleEdit} />
     </div>
   );
 };
@@ -288,8 +426,10 @@ File: D:\goit-react-hw-08-1-phonebook\src\redux\authOperations.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Set the Authorization header
-const setAuthHeader = token => {
+const API_URL = 'https://connections-api.goit.global'; // Base API URL
+
+// Define setAuthHeader to set the token in headers
+const setAuthHeader = (token) => {
   axios.defaults.headers.common.Authorization = `Bearer ${token}`;
 };
 
@@ -298,49 +438,42 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, thunkAPI) => {
     try {
-      console.log('Registering user with data:', userData); // Log the data
-      const { data } = await axios.post('/users/signup', userData);
+      const { data } = await axios.post(`${API_URL}/users/signup`, userData);
       return data;
     } catch (error) {
-      console.error('Registration error:', error.response?.data || error.message); // Log any errors
       return thunkAPI.rejectWithValue('Registration failed');
     }
   }
 );
-
 
 // Login user
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, thunkAPI) => {
     try {
-      const { data } = await axios.post('/users/login', credentials);
-      axios.defaults.headers.common.Authorization = `Bearer ${data.token}`; // Set the token after login
-      return data;  // The response should contain both token and user data
+      const { data } = await axios.post(`${API_URL}/users/login`, credentials);
+      setAuthHeader(data.token); // Set token in headers after login
+      return data;
     } catch (error) {
-      return thunkAPI.rejectWithValue('Login failed.');
+      return thunkAPI.rejectWithValue('Login failed');
     }
   }
 );
-
 
 // Logout user
 export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
 
-  console.log('Token being sent for logout:', token);
-
   if (!token) {
-    return thunkAPI.rejectWithValue('No token found, cannot logout.');
+    return thunkAPI.rejectWithValue('No token found, cannot logout');
   }
 
   try {
-    setAuthHeader(token);
-    await axios.post('/users/logout');
-    axios.defaults.headers.common.Authorization = '';
+    setAuthHeader(token); // Set the token in headers
+    await axios.post(`${API_URL}/users/logout`);
+    axios.defaults.headers.common.Authorization = ''; // Clear token
   } catch (error) {
-    console.error('Logout error:', error.response?.data || error.message);
-    return thunkAPI.rejectWithValue('Logout failed. Unauthorized.');
+    return thunkAPI.rejectWithValue('Logout failed');
   }
 });
 File: D:\goit-react-hw-08-1-phonebook\src\redux\authSlice.js 
@@ -381,21 +514,18 @@ const authSlice = createSlice({
 
 export default authSlice.reducer;
 File: D:\goit-react-hw-08-1-phonebook\src\redux\contactsOperations.js 
-//src/redus/contactsOperatios.jsx
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const API_URL = 'https://connections-api.goit.global';
-axios.defaults.baseURL = API_URL;
-
 
 // Fetch contacts operation
 export const fetchContacts = createAsyncThunk(
   'contacts/fetchAll',
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(API_URL);
-      console.log('Contacts fetched:', response.data); // Log API response
+      const response = await axios.get(`${API_URL}/contacts`); // Correct endpoint
+      console.log('Contacts fetched:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching contacts:', error.message);
@@ -409,8 +539,8 @@ export const addContact = createAsyncThunk(
   'contacts/addContact',
   async (newContact, thunkAPI) => {
     try {
-      const response = await axios.post(API_URL, newContact);
-      console.log('Contact added:', response.data); // Log API response
+      const response = await axios.post(`${API_URL}/contacts`, newContact); // Correct endpoint
+      console.log('Contact added:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error adding contact:', error.message);
@@ -424,8 +554,8 @@ export const deleteContact = createAsyncThunk(
   'contacts/deleteContact',
   async (contactId, thunkAPI) => {
     try {
-      await axios.delete(`${API_URL}/${contactId}`);
-      console.log(`Contact with ID ${contactId} deleted`); // Log deletion
+      await axios.delete(`${API_URL}/contacts/${contactId}`); // Correct endpoint
+      console.log(`Contact with ID ${contactId} deleted`);
       return contactId;
     } catch (error) {
       console.error('Error deleting contact:', error.message);
@@ -433,16 +563,34 @@ export const deleteContact = createAsyncThunk(
     }
   }
 );
+// Update contact operation
+export const updateContact = createAsyncThunk(
+  'contacts/updateContact',
+  async ({ id, updatedContact }, thunkAPI) => {
+    try {
+      const response = await axios.put(`${API_URL}/contacts/${id}`, updatedContact);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue('Failed to update contact');
+    }
+  }
+);
 File: D:\goit-react-hw-08-1-phonebook\src\redux\contactsSlice.js 
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchContacts, addContact, deleteContact } from './contactsOperations';
+import { fetchContacts, addContact, deleteContact, updateContact } from './contactsOperations';
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
     items: [],
+    filter: '',
     isLoading: false,
     error: null,
+  },
+  reducers: {
+    setFilter(state, action) {
+      state.filter = action.payload;
+    },
   },
   extraReducers: builder => {
     builder
@@ -462,10 +610,17 @@ const contactsSlice = createSlice({
       })
       .addCase(deleteContact.fulfilled, (state, action) => {
         state.items = state.items.filter(contact => contact.id !== action.payload);
+      })
+      .addCase(updateContact.fulfilled, (state, action) => {
+        const index = state.items.findIndex(contact => contact.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   },
 });
 
+export const { setFilter } = contactsSlice.actions;
 export default contactsSlice.reducer;
 File: D:\goit-react-hw-08-1-phonebook\src\redux\store.js 
 // src/redux/store.js

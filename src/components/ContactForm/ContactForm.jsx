@@ -1,20 +1,35 @@
 // src/components/ContactForm/ContactForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { addContact } from '../../redux/contactsOperations';
+import { addContact, updateContact } from '../../redux/contactsOperations';
 
-const ContactForm = () => {
+const ContactForm = ({ contactToUpdate }) => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
   const dispatch = useDispatch();
 
-  const handleSubmit = e => {
+  useEffect(() => {
+    if (contactToUpdate) {
+      setName(contactToUpdate.name);
+      setNumber(contactToUpdate.number);
+    } else {
+      setName('');
+      setNumber('');
+    }
+  }, [contactToUpdate]);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (name === '' || number === '') {
       return alert('Please fill in both fields.');
     }
-    
-    dispatch(addContact({ name, number }));
+
+    if (contactToUpdate) {
+      dispatch(updateContact({ id: contactToUpdate.id, name, number }));
+    } else {
+      dispatch(addContact({ name, number }));
+    }
+
     setName('');
     setNumber('');
   };
@@ -26,7 +41,7 @@ const ContactForm = () => {
         <input
           type="text"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
         />
       </label>
       <label>
@@ -34,10 +49,10 @@ const ContactForm = () => {
         <input
           type="tel"
           value={number}
-          onChange={e => setNumber(e.target.value)}
+          onChange={(e) => setNumber(e.target.value)}
         />
       </label>
-      <button type="submit">Add Contact</button>
+      <button type="submit">{contactToUpdate ? 'Update Contact' : 'Add Contact'}</button>
     </form>
   );
 };
