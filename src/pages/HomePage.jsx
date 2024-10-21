@@ -1,5 +1,6 @@
 // src/pages/HomePage.jsx
 import React from 'react';
+import { NavLink } from 'react-router-dom'; // Import NavLink
 
 const HomePage = () => (
   <div>
@@ -12,4 +13,4 @@ const HomePage = () => (
   </div>
 );
 
-export default HomePage;  // Ensure this is default export
+export default HomePage;
